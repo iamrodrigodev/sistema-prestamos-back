@@ -13,7 +13,8 @@ class UsuariosController {
 
   obtener = tryCatch(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const usuario = await UsuarioService.getById(parseInt(id as string));
+    const usuario = await UsuarioService.getByIdSafe(parseInt(id as string));
+
     res.status(200).json({
       success: true,
       data: usuario,
@@ -23,6 +24,7 @@ class UsuariosController {
   crear = tryCatch(async (req: Request, res: Response) => {
     const { nombre, usuario, password, rol } = req.body;
     const foto = req.file ? req.file.filename : undefined;
+    const adminId = (req as any).user.id;
 
     const nuevoUsuario = await UsuarioService.create({
       nombre,
@@ -31,7 +33,7 @@ class UsuariosController {
       rol,
       foto,
       estado: 1,
-    });
+    }, adminId);
 
     res.status(201).json({
       success: true,
@@ -44,11 +46,12 @@ class UsuariosController {
     const { id } = req.params;
     const { nombre, usuario, rol, estado } = req.body;
     const foto = req.file ? req.file.filename : undefined;
+    const adminId = (req as any).user.id;
 
     const dataToUpdate: any = { nombre, usuario, rol, estado: parseInt(estado) };
     if (foto) dataToUpdate.foto = foto;
 
-    const usuarioActualizado = await UsuarioService.update(parseInt(id as string), dataToUpdate);
+    const usuarioActualizado = await UsuarioService.update(parseInt(id as string), dataToUpdate, adminId);
 
     res.status(200).json({
       success: true,
@@ -59,7 +62,8 @@ class UsuariosController {
 
   eliminar = tryCatch(async (req: Request, res: Response) => {
     const { id } = req.params;
-    await UsuarioService.delete(parseInt(id as string));
+    const adminId = (req as any).user.id;
+    await UsuarioService.delete(parseInt(id as string), adminId);
 
     res.status(200).json({
       success: true,

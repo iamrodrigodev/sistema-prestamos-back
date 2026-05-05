@@ -1,31 +1,30 @@
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { ENV } from '../config/env';
 
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT || '465'),
-    secure: true,
+    host: ENV.EMAIL_HOST,
+    port: ENV.EMAIL_PORT,
+    secure: ENV.EMAIL_PORT === 465,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: ENV.EMAIL_USER,
+        pass: ENV.EMAIL_PASS
     }
 });
 
 export class EmailService {
     
     static async enviarCorreo(destinatario: string, asunto: string, contenidoHTML: string): Promise<void> {
-        if (!destinatario) return;
+        if (!destinatario || !ENV.EMAIL_USER) return;
         try {
             await transporter.sendMail({
-                from: `"Sistema Financiero" <${process.env.EMAIL_USER}>`,
+                from: `"Sistema Financiero" <${ENV.EMAIL_USER}>`,
                 to: destinatario,
                 subject: asunto,
                 html: contenidoHTML
             });
-} catch (error: any) {
-}
+        } catch (error: any) {
+            console.error('Error al enviar email:', error);
+        }
     }
 
     static plantillaPrestamo(cliente: string, monto: string | number, cuotas: string | number, total: string | number, moneda: string): string {

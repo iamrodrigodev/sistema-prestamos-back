@@ -13,7 +13,7 @@ class SimuladorController {
       });
     }
 
-    const resultado = SimuladorService.calcular({
+    const resultado = await SimuladorService.calcular({
       monto: parseFloat(monto),
       interes: parseFloat(interes),
       cuotas: parseInt(cuotas),

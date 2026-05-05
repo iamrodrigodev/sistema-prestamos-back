@@ -12,8 +12,11 @@ export class Gasto {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   monto!: number;
 
-  @CreateDateColumn()
-  fecha!: Date;
+  @Column({ type: 'varchar', length: 50 })
+  categoria!: string;
+
+  @Column({ type: 'date' })
+  fecha_gasto!: Date;
 
   @Column({ nullable: true })
   usuario_id?: number;
@@ -21,4 +24,13 @@ export class Gasto {
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'usuario_id' })
   usuario?: Usuario;
+
+  @Column({ type: 'varchar', length: 100, default: 'Sistema' })
+  registrado_por!: string;
+
+  @Column({ type: 'text', nullable: true })
+  observacion?: string;
+
+  @CreateDateColumn()
+  created_at!: Date;
 }

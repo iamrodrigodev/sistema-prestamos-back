@@ -9,7 +9,7 @@ export class Empeno {
   @Column()
   cliente_id!: number;
 
-  @ManyToOne(() => Cliente)
+  @ManyToOne(() => Cliente, (cliente) => cliente.empenos)
   @JoinColumn({ name: 'cliente_id' })
   cliente!: Cliente;
 
@@ -20,16 +20,20 @@ export class Empeno {
   descripcion?: string;
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
+  valor_tasacion!: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
   monto_prestado!: number;
 
   @Column({ type: 'date' })
-  fecha_inicio!: Date;
+  fecha_limite!: Date;
 
-  @Column({ type: 'date' })
-  fecha_vencimiento!: Date;
-
-  @Column({ type: 'enum', enum: ['activo', 'recuperado', 'rematado'], default: 'activo' })
-  estado!: 'activo' | 'recuperado' | 'rematado';
+  @Column({ 
+    type: 'enum', 
+    enum: ['en_custodia', 'retirado', 'perdido', 'vendido'], 
+    default: 'en_custodia' 
+  })
+  estado!: 'en_custodia' | 'retirado' | 'perdido' | 'vendido';
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   imagen?: string;

@@ -2,11 +2,11 @@
   "name": "sistema-prestamos-backend",
   "version": "1.0.0",
   "description": "API REST para el Sistema de Préstamos",
-  "main": "dist/app.js",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon src/app.ts",
+    "dev": "nodemon src/server.ts",
     "build": "tsc",
-    "start": "node dist/app.ts",
+    "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts"
   },

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/AuthService';
 import { tryCatch } from '../utils/tryCatch';
+import { ApiError } from '../utils/ApiError';
 
 class AuthController {
   login = tryCatch(async (req: Request, res: Response) => {
@@ -32,12 +33,9 @@ class AuthController {
   });
 
   me = tryCatch(async (req: Request, res: Response) => {
-    const usuario = (req as any).user;
+    const usuario = req.user;
     if (!usuario) {
-      return res.status(401).json({
-        success: false,
-        message: 'No autenticado',
-      });
+      throw new ApiError(401, 'No autenticado');
     }
 
     res.status(200).json({
@@ -48,4 +46,3 @@ class AuthController {
 }
 
 export default new AuthController();
-

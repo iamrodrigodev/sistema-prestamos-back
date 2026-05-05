@@ -1,6 +1,7 @@
 import { AppDataSource } from '../config/data-source';
 import { Configuracion } from '../entities/Configuracion';
 import { ApiError } from '../utils/ApiError';
+import { BitacoraService } from './BitacoraService';
 
 export class ConfigService {
   private static repository = AppDataSource.getRepository(Configuracion);
@@ -13,9 +14,13 @@ export class ConfigService {
     return config;
   }
 
-  static async update(data: Partial<Configuracion>) {
+  static async update(data: Partial<Configuracion>, usuarioId: number) {
     const config = await this.get();
     this.repository.merge(config, data);
-    return await this.repository.save(config);
+    const updated = await this.repository.save(config);
+
+    await BitacoraService.register(usuarioId, 'ACTUALIZAR_CONFIG', 'Se actualizó la configuración global del sistema');
+
+    return updated;
   }
 }

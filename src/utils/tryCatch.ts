@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
-export const tryCatch = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+type ControllerMethod = (req: Request, res: Response, next: NextFunction) => Promise<void | Response>;
+
+export const tryCatch = (fn: ControllerMethod) => (req: Request, res: Response, next: NextFunction) => {
   return Promise.resolve(fn(req, res, next)).catch(next);
 };

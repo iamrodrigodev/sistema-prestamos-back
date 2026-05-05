@@ -67,34 +67,55 @@ export class PagoService {
         .getRawOne();
       
       const totalPagadoBefore = parseFloat(result.total || '0');
-      const saldoPendiente = parseFloat(prestamo.monto_total.toString()) - totalPagadoBefore;
+      const saldoCapitalPendiente = parseFloat(prestamo.monto_total.toString()) - totalPagadoBefore;
+      const moraPendiente = parseFloat(prestamo.monto_mora.toString());
 
-      // 3. Validar que el monto no exceda la deuda
-      if (data.monto > saldoPendiente + 0.05) { // Pequeño margen para errores de redondeo
+      // El monto enviado por el cliente primero debe cubrir la mora y luego el capital
+      let montoParaMora = 0;
+      let montoParaCapital = 0;
+
+      if (data.monto <= moraPendiente) {
+          montoParaMora = data.monto;
+          montoParaCapital = 0;
+      } else {
+          montoParaMora = moraPendiente;
+          montoParaCapital = data.monto - moraPendiente;
+      }
+
+      // 3. Validar que el monto para capital no exceda la deuda
+      if (montoParaCapital > saldoCapitalPendiente + 0.05) { 
         throw new ApiError(
           400,
-          `El monto excede la deuda pendiente (${saldoPendiente.toFixed(2)})`
+          `El monto excede la deuda total (Capital: ${saldoCapitalPendiente.toFixed(2)}, Mora: ${moraPendiente.toFixed(2)})`
         );
       }
 
       // 4. Registrar el pago
       const nuevoPago = this.repository.create({
-          ...data,
+          prestamo_id: data.prestamo_id,
+          monto: montoParaCapital,
+          monto_mora: montoParaMora,
+          metodo_pago: data.metodo_pago,
+          nro_cuota: data.nro_cuota,
+          usuario_id: usuario_id,
           fecha_pago: new Date()
       });
       const pagoGuardado = await transactionalEntityManager.save(nuevoPago);
 
-      // 5. Actualizar estado del préstamo si se completó el pago
-      if (totalPagadoBefore + data.monto >= parseFloat(prestamo.monto_total.toString()) - 0.05) {
+      // 5. Actualizar préstamo (reducir mora y verificar estado)
+      prestamo.monto_mora = parseFloat((moraPendiente - montoParaMora).toFixed(2));
+      
+      if (totalPagadoBefore + montoParaCapital >= parseFloat(prestamo.monto_total.toString()) - 0.05) {
         prestamo.estado = 'pagado';
-        await transactionalEntityManager.save(prestamo);
       }
+      
+      await transactionalEntityManager.save(prestamo);
 
       // 6. Registro en Bitácora
       await BitacoraService.register(
         usuario_id,
         'PAGO_REGISTRADO',
-        `Pago de ${data.monto} registrado para préstamo #${data.prestamo_id}. Cuota #${data.nro_cuota}`
+        `Pago de ${data.monto} (Cap: ${montoParaCapital}, Mora: ${montoParaMora}) registrado para préstamo #${data.prestamo_id}.`
       );
 
       return pagoGuardado;

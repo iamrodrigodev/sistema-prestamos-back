@@ -11,10 +11,11 @@ export class CajaService {
     const endOfDay = new Date(fecha);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // 1. Cobros de Préstamos (Ingresos)
+    // 1. Cobros de Préstamos (Ingresos) - Incluyendo Mora
     const cobrosPrestamos = await AppDataSource.getRepository(Pago)
       .createQueryBuilder('pago')
-      .select('SUM(pago.monto)', 'total')
+      .select('SUM(pago.monto)', 'capital')
+      .addSelect('SUM(pago.monto_mora)', 'mora')
       .where('pago.fecha_pago BETWEEN :start AND :end', { start: startOfDay, end: endOfDay })
       .getRawOne();
 
@@ -51,10 +52,15 @@ export class CajaService {
     const gastosOperativos = await AppDataSource.getRepository(Gasto)
       .createQueryBuilder('gasto')
       .select('SUM(gasto.monto)', 'total')
-      .where('gasto.fecha BETWEEN :start AND :end', { start: startOfDay, end: endOfDay })
+      .where('gasto.fecha_gasto BETWEEN :start AND :end', { start: startOfDay, end: endOfDay })
       .getRawOne();
 
-    const ingresos = parseFloat(cobrosPrestamos.total || 0) + parseFloat(depositosAhorro.total || 0);
+    const cobroCapital = parseFloat(cobrosPrestamos.capital || 0);
+    const cobroMora = parseFloat(cobrosPrestamos.mora || 0);
+    const depositos = parseFloat(depositosAhorro.total || 0);
+
+    const ingresos = cobroCapital + cobroMora + depositos;
+    
     const egresos =
       parseFloat(prestamosEntregados.total || 0) +
       parseFloat(retirosAhorro.total || 0) +
@@ -63,8 +69,9 @@ export class CajaService {
     return {
       fecha,
       ingresos: {
-        cobrosPrestamos: parseFloat(cobrosPrestamos.total || 0),
-        depositosAhorro: parseFloat(depositosAhorro.total || 0),
+        cobroCapital,
+        cobroMora,
+        depositosAhorro: depositos,
         total: ingresos,
       },
       egresos: {

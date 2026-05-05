@@ -14,3 +14,8 @@ declare module 'express-session' {
     rol: string;
   }
 }
+
+// Interfaz genérica para errores
+export interface CustomError extends Error {
+  statusCode?: number;
+}

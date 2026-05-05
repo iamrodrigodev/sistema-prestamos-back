@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
-  if ((req as any).user) {
+  if (req.user) {
     return next();
   }
 
@@ -12,7 +12,7 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-  const user = (req as any).user;
+  const user = req.user;
   if (user && user.rol === 'admin') {
     return next();
   }

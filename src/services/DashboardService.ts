@@ -17,11 +17,11 @@ export class DashboardService {
       clienteRepo.count(),
       prestamoRepo.createQueryBuilder('p')
         .select('SUM(p.monto_prestado)', 'total')
-        .where('p.estado = :estado', { estado: 'pendiente' })
+        .where('p.estado != :estado', { estado: 'pagado' })
         .getRawOne(),
       empenoRepo.count({ where: { estado: 'en_custodia' } }),
       pagoRepo.createQueryBuilder('pago')
-        .select('SUM(pago.monto)', 'total')
+        .select('SUM(pago.monto + pago.monto_mora)', 'total')
         .getRawOne(),
       prestamoRepo.createQueryBuilder('p')
         .select('SUM(p.monto_prestado)', 'total')

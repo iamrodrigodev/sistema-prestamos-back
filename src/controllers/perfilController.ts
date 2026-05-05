@@ -9,7 +9,7 @@ class PerfilController {
     const userId = (req as any).user?.id;
     if (!userId) throw new ApiError(401, 'No autorizado');
 
-    const usuario = await UsuarioService.getById(userId);
+    const usuario = await UsuarioService.getByIdSafe(userId);
     res.status(200).json({
       success: true,
       data: usuario,

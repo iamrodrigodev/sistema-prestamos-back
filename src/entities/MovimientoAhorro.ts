@@ -13,15 +13,15 @@ export class MovimientoAhorro {
   @JoinColumn({ name: 'cuenta_id' })
   cuenta!: CuentaAhorro;
 
-  @Column({ type: 'enum', enum: ['deposito', 'retiro'] })
-  tipo_movimiento!: 'deposito' | 'retiro';
+  @Column({ type: 'enum', enum: ['deposito', 'retiro', 'interes_ganado'] })
+  tipo_movimiento!: 'deposito' | 'retiro' | 'interes_ganado';
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   monto!: number;
 
-  @Column({ type: 'text', nullable: true })
-  observacion?: string;
-
   @CreateDateColumn()
   fecha_movimiento!: Date;
+
+  @Column({ type: 'text', nullable: true })
+  observacion?: string;
 }

@@ -25,4 +25,10 @@ export class Configuracion {
 
   @Column({ type: 'varchar', length: 5, default: '$' })
   moneda!: string;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 1.00 })
+  tasa_mora_diaria!: number;
+
+  @Column({ type: 'int', default: 0 })
+  dias_gracia_mora!: number;
 }

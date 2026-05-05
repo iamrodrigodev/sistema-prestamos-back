@@ -33,6 +33,8 @@ export const seedDatabase = async () => {
       telefono: '01 444-5555',
       email_contacto: 'contacto@mifinanciera.com',
       moneda: 'S/',
+      tasa_mora_diaria: 1.50,
+      dias_gracia_mora: 2,
     });
     await configRepo.save(config);
     console.log('Default configuration created');

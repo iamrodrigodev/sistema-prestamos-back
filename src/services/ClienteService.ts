@@ -30,7 +30,10 @@ export class ClienteService {
   }
 
   static async getById(id: number) {
-    const cliente = await this.repository.findOne({ where: { id } });
+    const cliente = await this.repository.findOne({ 
+      where: { id },
+      relations: ['prestamos', 'cuentasAhorro', 'empenos']
+    });
     if (!cliente) {
       throw new ApiError(404, 'Cliente no encontrado');
     }

@@ -38,6 +38,9 @@ export class Prestamo {
   @Column({ type: 'enum', enum: ['pendiente', 'pagado', 'vencido'], default: 'pendiente' })
   estado!: 'pendiente' | 'pagado' | 'vencido';
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0.00 })
+  monto_mora!: number;
+
   @CreateDateColumn()
   created_at!: Date;
 

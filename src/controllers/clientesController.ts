@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ClienteService } from '../services/ClienteService';
 import { tryCatch } from '../utils/tryCatch';
+import { ApiError } from '../utils/ApiError';
 
 class ClienteController {
   listar = tryCatch(async (req: Request, res: Response) => {
@@ -29,7 +30,9 @@ class ClienteController {
   crear = tryCatch(async (req: Request, res: Response) => {
     const { dni, nombre, apellido, telefono, direccion, email } = req.body;
     const foto = req.file ? req.file.filename : undefined;
-    const usuario_id = (req as any).user.id;
+    
+    if (!req.user) throw new ApiError(401, 'No autorizado');
+    const usuario_id = req.user.id;
 
     const cliente = await ClienteService.create({
       dni,
@@ -52,10 +55,11 @@ class ClienteController {
     const { id } = req.params;
     const { dni, nombre, apellido, telefono, direccion, email } = req.body;
     const foto = req.file ? req.file.filename : undefined;
-    const usuario_id = (req as any).user.id;
 
-    const dataToUpdate: any = { dni, nombre, apellido, telefono, direccion, email };
-    if (foto) dataToUpdate.foto = foto;
+    if (!req.user) throw new ApiError(401, 'No autorizado');
+    const usuario_id = req.user.id;
+
+    const dataToUpdate = { dni, nombre, apellido, telefono, direccion, email, foto };
 
     const cliente = await ClienteService.update(parseInt(id as string), dataToUpdate, usuario_id);
 
@@ -68,7 +72,9 @@ class ClienteController {
 
   eliminar = tryCatch(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const usuario_id = (req as any).user.id;
+    if (!req.user) throw new ApiError(401, 'No autorizado');
+    const usuario_id = req.user.id;
+
     await ClienteService.delete(parseInt(id as string), usuario_id);
 
     res.status(200).json({
@@ -79,4 +85,3 @@ class ClienteController {
 }
 
 export default new ClienteController();
-
