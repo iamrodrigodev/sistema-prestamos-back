@@ -9,9 +9,9 @@ export const ENV = {
   
   // Base de Datos
   DB_HOST: process.env.DB_HOST || 'localhost',
-  DB_PORT: Number(process.env.DB_PORT) || 5432,
+  DB_PORT: Number(process.env.DB_PORT) || 5433,
   DB_USER: process.env.DB_USER || 'postgres',
-  DB_PASSWORD: process.env.DB_PASSWORD || '',
+  DB_PASSWORD: process.env.DB_PASSWORD || 'admin123',
   DB_NAME: process.env.DB_NAME || 'sistema_prestamos',
 
   // Seguridad y Sesiones
