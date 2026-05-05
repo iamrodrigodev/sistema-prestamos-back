@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato de Préstamo #<%= prestamo.id %></title>
+    <style>
+        body { font-family: 'Helvetica', Arial, sans-serif; line-height: 1.6; color: #333; margin: 40px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { max-width: 100px; margin-bottom: 10px; }
+        h1 { font-size: 22px; margin-bottom: 5px; text-decoration: underline; }
+        .section { margin-bottom: 20px; }
+        .section-title { font-weight: bold; text-decoration: underline; margin-bottom: 10px; display: block; }
+        .clause { margin-bottom: 15px; text-align: justify; }
+        .clause-title { font-weight: bold; }
+        .signatures { margin-top: 80px; display: flex; justify-content: space-between; }
+        .signature-box { text-align: center; width: 45%; border-top: 1px solid #000; padding-top: 10px; }
+        .footer { margin-top: 50px; font-size: 12px; color: #666; text-align: center; }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="background: #f4f4f4; padding: 10px; text-align: right;">
+        <button onclick="window.print()">Imprimir / Guardar PDF</button>
+    </div>
+
+    <div class="header">
+        <% if (config.logo) { %>
+            <img src="/uploads/<%= config.logo %>" class="logo" alt="Logo">
+        <% } %>
+        <h1>CONTRATO DE PRÉSTAMO DE DINERO</h1>
+        <p>NRO OPERACIÓN: <strong><%= prestamo.id %></strong></p>
+    </div>
+
+    <div class="section">
+        <p>En la ciudad, a los <%= new Date(prestamo.fecha_inicio).toLocaleDateString() %>, se celebra el presente contrato entre:</p>
+        
+        <span class="section-title">EL ACREEDOR:</span>
+        <p>
+            Empresa: <strong><%= config.nombre_empresa %></strong><br>
+            RUC: <%= config.ruc %><br>
+            Dirección: <%= config.direccion || 'Oficina Principal' %>
+        </p>
+
+        <span class="section-title">EL DEUDOR (CLIENTE):</span>
+        <p>
+            Nombre: <strong><%= prestamo.cliente.nombre %> <%= prestamo.cliente.apellido %></strong><br>
+            Documento de Identidad (DNI): <%= prestamo.cliente.dni %><br>
+            Teléfono: <%= prestamo.cliente.telefono || 'No registrado' %>
+        </p>
+    </div>
+
+    <div class="section">
+        <center><strong>CLÁUSULAS DEL CONTRATO:</strong></center>
+        
+        <div class="clause">
+            <span class="clause-title">PRIMERO (DEL MONTO):</span>
+            EL ACREEDOR entrega a EL DEUDOR la suma de <strong><%= config.moneda %> <%= Number(prestamo.monto_prestado).toFixed(2) %></strong> en calidad de préstamo.
+        </div>
+
+        <div class="clause">
+            <span class="clause-title">SEGUNDO (DE LA DEVOLUCIÓN):</span>
+            EL DEUDOR se compromete a devolver la suma total de <strong><%= config.moneda %> <%= Number(prestamo.monto_total).toFixed(2) %></strong>, la cual incluye capital e intereses.
+        </div>
+
+        <div class="clause">
+            <span class="clause-title">TERCERO (FORMA DE PAGO):</span>
+            El pago se realizará en <strong><%= prestamo.cuotas %></strong> cuotas con frecuencia <strong><%= prestamo.frecuencia.toUpperCase() %></strong>.
+        </div>
+    </div>
+
+    <div class="signatures">
+        <div class="signature-box">
+            FIRMA DE ACREEDOR<br>
+            <small><%= config.nombre_empresa %></small>
+        </div>
+        <div class="signature-box">
+            FIRMA DE DEUDOR<br>
+            <small><%= prestamo.cliente.nombre %> <%= prestamo.cliente.apellido %></small><br>
+            <small>DNI: <%= prestamo.cliente.dni %></small>
+        </div>
+    </div>
+
+    <div class="footer">
+        Este documento es un comprobante de la operación realizada el <%= new Date().toLocaleString() %>
+    </div>
+</body>
+</html>

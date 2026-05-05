@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket de Pago #<%= pago.id %></title>
+    <style>
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            width: 80mm; 
+            margin: 0 auto; 
+            padding: 5mm;
+            font-size: 12px;
+            color: #000;
+        }
+        .text-center { text-align: center; }
+        .bold { font-weight: bold; }
+        .divider { border-top: 1px dashed #000; margin: 5px 0; }
+        .m-0 { margin: 0; }
+        .header { margin-bottom: 10px; }
+        .details { margin: 10px 0; }
+        .total-box { 
+            background: #eee; 
+            padding: 5px; 
+            text-align: center; 
+            margin: 10px 0;
+            border: 1px solid #000;
+        }
+        .total-amount { font-size: 18px; font-weight: bold; }
+        @media print {
+            body { width: 100%; margin: 0; padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center; margin-bottom: 10px;">
+        <button onclick="window.print()">Imprimir Ticket</button>
+    </div>
+
+    <div class="header text-center">
+        <p class="bold m-0"><%= config.nombre_empresa %></p>
+        <p class="m-0">RUC: <%= config.ruc %></p>
+        <p class="m-0"><%= config.direccion %></p>
+        <p class="m-0">Tel: <%= config.telefono %></p>
+    </div>
+
+    <div class="divider"></div>
+    <p class="text-center bold m-0">TICKET DE PAGO</p>
+    <p class="text-center m-0">NRO PAGO: <%= pago.id %></p>
+    <div class="divider"></div>
+
+    <div class="details">
+        <p class="m-0"><span class="bold">CLIENTE:</span> <%= pago.prestamo.cliente.nombre %> <%= pago.prestamo.cliente.apellido %></p>
+        <p class="m-0"><span class="bold">DNI:</span> <%= pago.prestamo.cliente.dni %></p>
+        <div class="divider"></div>
+        <p class="m-0"><span class="bold">REF PRÉSTAMO:</span> #<%= pago.prestamo.id %></p>
+        <p class="m-0"><span class="bold">CUOTA NRO:</span> <%= pago.nro_cuota %></p>
+        <p class="m-0"><span class="bold">FECHA:</span> <%= new Date(pago.fecha_pago).toLocaleString() %></p>
+        <p class="m-0"><span class="bold">MÉTODO:</span> <%= pago.metodo_pago || 'Efectivo' %></p>
+    </div>
+
+    <div class="total-box">
+        <p class="m-0 bold">TOTAL PAGADO</p>
+        <p class="total-amount m-0"><%= config.moneda %> <%= Number(pago.monto).toFixed(2) %></p>
+    </div>
+
+    <p class="text-center">¡Gracias por su puntualidad!</p>
+    <p class="text-center" style="font-size: 10px;"><%= new Date().toLocaleString() %></p>
+
+</body>
+</html>
