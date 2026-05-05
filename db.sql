@@ -1,143 +1,138 @@
--- Volcando estructura de base de datos para sistema_prestamos
-CREATE DATABASE IF NOT EXISTS `sistema_prestamos` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `sistema_prestamos`;
+-- Estructura de base de datos para Sistema de Préstamos (PostgreSQL)
 
--- Volcando estructura para tabla sistema_prestamos.bitacora
-CREATE TABLE IF NOT EXISTS `bitacora` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `usuario_id` int DEFAULT NULL,
-  `accion` varchar(50) DEFAULT NULL,
-  `detalle` text,
-  `ip` varchar(50) DEFAULT NULL,
-  `fecha` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `usuario_id` (`usuario_id`),
-  CONSTRAINT `bitacora_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 1. Usuarios
+CREATE TYPE rol_usuario AS ENUM ('admin', 'empleado');
 
--- Volcando estructura para tabla sistema_prestamos.clientes
-CREATE TABLE IF NOT EXISTS `clientes` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `dni` varchar(20) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
-  `apellido` varchar(50) NOT NULL,
-  `telefono` varchar(20) DEFAULT NULL,
-  `direccion` varchar(255) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `foto` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `dni` (`dni`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    usuario VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    rol rol_usuario DEFAULT 'empleado',
+    estado INTEGER DEFAULT 1,
+    foto VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Volcando estructura para tabla sistema_prestamos.configuracion
-CREATE TABLE IF NOT EXISTS `configuracion` (
-  `id` int NOT NULL,
-  `nombre_empresa` varchar(100) DEFAULT 'Mi Financiera',
-  `ruc` varchar(20) DEFAULT '00000000000',
-  `direccion` varchar(255) DEFAULT 'Dirección Principal',
-  `telefono` varchar(50) DEFAULT '555-0000',
-  `email_contacto` varchar(100) DEFAULT 'contacto@empresa.com',
-  `logo` varchar(255) DEFAULT NULL,
-  `moneda` varchar(5) DEFAULT '$',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 2. Configuración Global
+CREATE TABLE IF NOT EXISTS configuracion (
+    id INTEGER PRIMARY KEY,
+    nombre_empresa VARCHAR(100) DEFAULT 'Mi Financiera',
+    ruc VARCHAR(20),
+    direccion VARCHAR(255),
+    telefono VARCHAR(50),
+    email_contacto VARCHAR(100),
+    logo VARCHAR(255),
+    moneda VARCHAR(5) DEFAULT '$',
+    tasa_mora_diaria DECIMAL(5,2) DEFAULT 1.00,
+    dias_gracia_mora INTEGER DEFAULT 0
+);
 
--- Volcando estructura para tabla sistema_prestamos.cuentas_ahorro
-CREATE TABLE IF NOT EXISTS `cuentas_ahorro` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `cliente_id` int NOT NULL,
-  `saldo_actual` decimal(12,2) DEFAULT '0.00',
-  `fecha_apertura` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `cliente_id` (`cliente_id`),
-  CONSTRAINT `cuentas_ahorro_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 3. Clientes
+CREATE TABLE IF NOT EXISTS clientes (
+    id SERIAL PRIMARY KEY,
+    dni VARCHAR(20) UNIQUE NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    telefono VARCHAR(20),
+    direccion VARCHAR(255),
+    email VARCHAR(100),
+    foto VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Volcando estructura para tabla sistema_prestamos.empenos
-CREATE TABLE IF NOT EXISTS `empenos` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `cliente_id` int NOT NULL,
-  `nombre_articulo` varchar(100) NOT NULL,
-  `descripcion` text,
-  `valor_tasacion` decimal(10,2) NOT NULL,
-  `monto_prestado` decimal(10,2) NOT NULL,
-  `fecha_limite` date NOT NULL,
-  `estado` enum('en_custodia','retirado','perdido','vendido') DEFAULT 'en_custodia',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `imagen` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `cliente_id` (`cliente_id`),
-  CONSTRAINT `empenos_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 4. Préstamos
+CREATE TYPE frecuencia_pago AS ENUM ('diario', 'semanal', 'quincenal', 'mensual');
+CREATE TYPE estado_prestamo AS ENUM ('pendiente', 'pagado', 'vencido');
 
--- Volcando estructura para tabla sistema_prestamos.gastos
-CREATE TABLE IF NOT EXISTS `gastos` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `descripcion` varchar(255) NOT NULL,
-  `monto` decimal(10,2) NOT NULL,
-  `categoria` varchar(50) NOT NULL,
-  `fecha_gasto` date NOT NULL,
-  `usuario_id` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `registrado_por` varchar(100) DEFAULT 'Sistema',
-  `observacion` text,
-  PRIMARY KEY (`id`),
-  KEY `usuario_id` (`usuario_id`),
-  CONSTRAINT `gastos_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE IF NOT EXISTS prestamos (
+    id SERIAL PRIMARY KEY,
+    cliente_id INTEGER NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,
+    monto_prestado DECIMAL(12,2) NOT NULL,
+    tasa_interes DECIMAL(5,2) NOT NULL,
+    monto_total DECIMAL(12,2) NOT NULL,
+    cuotas INTEGER NOT NULL,
+    frecuencia frecuencia_pago DEFAULT 'mensual',
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    estado estado_prestamo DEFAULT 'pendiente',
+    monto_mora DECIMAL(12,2) DEFAULT 0.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Volcando estructura para tabla sistema_prestamos.movimientos_ahorro
-CREATE TABLE IF NOT EXISTS `movimientos_ahorro` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `cuenta_id` int NOT NULL,
-  `tipo_movimiento` enum('deposito','retiro','interes_ganado') NOT NULL,
-  `monto` decimal(10,2) NOT NULL,
-  `fecha_movimiento` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `observacion` text,
-  PRIMARY KEY (`id`),
-  KEY `cuenta_id` (`cuenta_id`),
-  CONSTRAINT `movimientos_ahorro_ibfk_1` FOREIGN KEY (`cuenta_id`) REFERENCES `cuentas_ahorro` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 5. Pagos
+CREATE TABLE IF NOT EXISTS pagos (
+    id SERIAL PRIMARY KEY,
+    prestamo_id INTEGER NOT NULL REFERENCES prestamos(id) ON DELETE CASCADE,
+    monto DECIMAL(12,2) NOT NULL,
+    monto_mora DECIMAL(12,2) DEFAULT 0.00,
+    fecha_pago TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metodo_pago VARCHAR(50) NOT NULL,
+    nro_cuota INTEGER NOT NULL,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id)
+);
 
--- Volcando estructura para tabla sistema_prestamos.pagos
-CREATE TABLE IF NOT EXISTS `pagos` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `prestamo_id` int NOT NULL,
-  `monto_pagado` decimal(10,2) NOT NULL,
-  `fecha_pago` datetime DEFAULT CURRENT_TIMESTAMP,
-  `observaciones` text,
-  PRIMARY KEY (`id`),
-  KEY `prestamo_id` (`prestamo_id`),
-  CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`prestamo_id`) REFERENCES `prestamos` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 6. Empeños
+CREATE TYPE estado_empeno AS ENUM ('en_custodia', 'retirado', 'perdido', 'vendido');
 
--- Volcando estructura para tabla sistema_prestamos.prestamos
-CREATE TABLE IF NOT EXISTS `prestamos` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `cliente_id` int NOT NULL,
-  `monto_prestado` decimal(10,2) NOT NULL,
-  `tasa_interes` decimal(5,2) NOT NULL,
-  `monto_total` decimal(10,2) NOT NULL,
-  `cuotas` int NOT NULL,
-  `frecuencia` enum('diario','semanal','mensual') NOT NULL,
-  `estado` enum('pendiente','pagado','vencido') DEFAULT 'pendiente',
-  `fecha_inicio` date NOT NULL,
-  `fecha_fin` date NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `cliente_id` (`cliente_id`),
-  CONSTRAINT `prestamos_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE IF NOT EXISTS empenos (
+    id SERIAL PRIMARY KEY,
+    cliente_id INTEGER NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,
+    nombre_articulo VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    valor_tasacion DECIMAL(12,2) NOT NULL,
+    monto_prestado DECIMAL(12,2) NOT NULL,
+    fecha_limite DATE NOT NULL,
+    estado estado_empeno DEFAULT 'en_custodia',
+    imagen VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Volcando estructura para tabla sistema_prestamos.usuarios
-CREATE TABLE IF NOT EXISTS `usuarios` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `nombre_completo` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `rol` enum('admin','empleado') DEFAULT 'empleado',
-  `estado` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- 7. Cuentas de Ahorro
+CREATE TABLE IF NOT EXISTS cuentas_ahorro (
+    id SERIAL PRIMARY KEY,
+    cliente_id INTEGER UNIQUE NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+    saldo_actual DECIMAL(12,2) DEFAULT 0.00,
+    fecha_apertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. Movimientos de Ahorro
+CREATE TYPE tipo_movimiento_ahorro AS ENUM ('deposito', 'retiro', 'interes_ganado');
+
+CREATE TABLE IF NOT EXISTS movimientos_ahorro (
+    id SERIAL PRIMARY KEY,
+    cuenta_id INTEGER NOT NULL REFERENCES cuentas_ahorro(id) ON DELETE CASCADE,
+    tipo_movimiento tipo_movimiento_ahorro NOT NULL,
+    monto DECIMAL(12,2) NOT NULL,
+    fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    observacion TEXT
+);
+
+-- 9. Gastos Operativos
+CREATE TABLE IF NOT EXISTS gastos (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(255) NOT NULL,
+    monto DECIMAL(12,2) NOT NULL,
+    categoria VARCHAR(50) NOT NULL,
+    fecha_gasto DATE NOT NULL,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    registrado_por VARCHAR(100) DEFAULT 'Sistema',
+    observacion TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 10. Bitácora de Auditoría
+CREATE TABLE IF NOT EXISTS bitacora (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    accion VARCHAR(50) NOT NULL,
+    detalle TEXT NOT NULL,
+    ip VARCHAR(50),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Índices básicos para optimización
+CREATE INDEX idx_prestamos_cliente ON prestamos(cliente_id);
+CREATE INDEX idx_pagos_prestamo ON pagos(prestamo_id);
+CREATE INDEX idx_ahorros_cliente ON cuentas_ahorro(cliente_id);
+CREATE INDEX idx_movimientos_cuenta ON movimientos_ahorro(cuenta_id);
